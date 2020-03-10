@@ -7,7 +7,7 @@ use BlackBits\ApiConsumer\Contracts\CollectionCallbackContract;
 use BlackBits\ApiConsumer\Support\ShapeResolver;
 use Zttp\Zttp;
 use Illuminate\Support\Facades\Cache;
-
+use Illuminate\Support\Facades\Log;
 
 abstract class Endpoint
 {
@@ -50,7 +50,7 @@ abstract class Endpoint
     {
         $key = $this->method . "-" . $this->uri();
 
-        if(!empty($this->options)) {
+        if (!empty($this->options)) {
             $value = $this->options;
             if (is_array($value)) {
                 $value = http_build_query($value, null, '&', PHP_QUERY_RFC3986);
@@ -68,7 +68,6 @@ abstract class Endpoint
      */
     private function request()
     {
-
         if (strtolower($this->method) == "get") {
 
             if ($this->shouldCache) {
@@ -77,6 +76,10 @@ abstract class Endpoint
                 });
             }
             return Zttp::withHeaders($this->headers)->get($this->uri(), $this->options)->body();
+        }
+
+        if (strtolower($this->method) == "post") {
+            return Zttp::withHeaders($this->headers)->post($this->uri(), $this->options)->body();
         }
 
         // TODO: other Methods
@@ -113,6 +116,24 @@ abstract class Endpoint
      * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
      * @throws \Exception
      */
+    final public function post()
+    {
+        $this->method = 'POST';
+
+        $collection = $this->shapeResolver->resolve($this->request());
+
+        /** @var CollectionCallbackContract $callback */
+        foreach ($this->collectionCallbacks as $callback) {
+            $collection = $callback->applyTo($collection);
+        }
+
+        return $collection;
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection|\Tightenco\Collect\Support\Collection
+     * @throws \Exception
+     */
     final public function first()
     {
         return $this->get()->first();
@@ -134,13 +155,12 @@ abstract class Endpoint
 
         if (!class_exists($collectionCallback)) {
             $this->registerCollectionCallback(
-                (new _ReflectionCollectionCallback(... $arguments))->setMethod($name)
+                (new _ReflectionCollectionCallback(...$arguments))->setMethod($name)
             );
             return $this;
         }
 
-        $this->registerCollectionCallback(new $collectionCallback(... $arguments));
+        $this->registerCollectionCallback(new $collectionCallback(...$arguments));
         return $this;
     }
-
 }
