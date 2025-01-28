@@ -9,7 +9,8 @@
     ],
     "homepage": "https://github.com/black-bits/larave-api-consumer",
     "license": "MIT",
-    "authors": [{
+    "authors": [
+        {
             "name": "Oliver Heck",
             "email": "oliver.heck@blackbits.io",
             "homepage": "https://blackbits.io",
@@ -28,9 +29,15 @@
             "role": "Developer"
         }
     ],
+    "repositories": [
+        {
+            "url": "https://github.com/dontastaturo/zttp",
+            "type": "git"
+        }
+    ],
     "require": {
         "php": "^7.1",
-        "kitetail/zttp": "^0.3.0"
+        "dontastaturo/zttp": "^0.6.2"
     },
     "require-dev": {
         "larapack/dd": "^1.0",
